@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Real Estate Predictor</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --text-dark: #2b2d42;
+            --text-light: #8d99ae;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: url('https://images.unsplash.com/photo-1600596542815-e25fa1108638?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Overlay to darken background image slightly */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: -1;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-light);
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+
+        /* Grid Layout for Inputs */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary-color);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 12px 12px 45px; /* Padding left for icon */
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            background: #f8f9fa;
+        }
+
+        input:focus {
+            border-color: var(--primary-color);
+            background: #fff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        }
+
+        /* Button Styling */
+        .btn-predict {
+            grid-column: 1 / -1; /* Span full width */
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(63, 55, 201, 0.4);
+        }
+
+        .btn-predict:active {
+            transform: translateY(0);
+        }
+
+        /* Result Area */
+        #result-container {
+            margin-top: 25px;
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            background: #f0f4ff;
+            border: 1px dashed var(--primary-color);
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.5s;
+        }
+
+        .price-tag {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: block;
+            margin-top: 5px;
+        }
+
+        /* Animations */
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Spinner for loading */
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="glass-card">
+        <h2>🏡 AI Property Valuator</h2>
+        <p class="subtitle">Enter the property details below to get an instant ML-powered valuation.</p>
+        
+        <form id="predictionForm" class="form-grid">
+            
+            <div class="input-group">
+                <label>Overall Quality (1-10)</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-star"></i>
+                    <input type="number" id="Overall Qual" required value="7" min="1" max="10">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Year Built</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-calendar-alt"></i>
+                    <input type="number" id="Year Built" required value="2005">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Year Remodeled</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-hammer"></i>
+                    <input type="number" id="Year Remod/Add" required value="2005">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Fireplaces</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-fire"></i>
+                    <input type="number" id="Fireplaces" required value="1">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Above Ground Living Area (sq ft)</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-ruler-combined"></i>
+                    <input type="number" id="Gr Liv Area" required value="1500">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>First Floor Area (sq ft)</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-layer-group"></i>
+                    <input type="number" id="1st Flr SF" required value="1000">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Total Basement Area (sq ft)</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-dungeon"></i>
+                    <input type="number" id="Total Bsmt SF" required value="1000">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Basement Finished Area (sq ft)</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-check-circle"></i>
+                    <input type="number" id="BsmtFin SF 1" required value="500">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Garage Cars (Capacity)</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-car"></i>
+                    <input type="number" id="Garage Cars" required value="2">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Garage Area (sq ft)</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-warehouse"></i>
+                    <input type="number" id="Garage Area" required value="500">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Full Bathrooms</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-bath"></i>
+                    <input type="number" id="Full Bath" required value="2">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Masonry Veneer Area (sq ft)</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-th"></i>
+                    <input type="number" id="Mas Vnr Area" required value="0">
+                </div>
+            </div>
+
+            <button type="button" class="btn-predict" onclick="predictPrice()">
+                <div class="spinner" id="spinner"></div>
+                <span id="btnText">Estimate Price</span>
+            </button>
+        </form>
+
+        <div id="result-container">
+            <span style="color: #666; font-size: 0.9rem;">Estimated Market Value</span>
+            <span class="price-tag" id="priceText">$0.00</span>
+        </div>
+    </div>
+
+    <script>
+        async function predictPrice() {
+            // UI References
+            const btn = document.querySelector('.btn-predict');
+            const spinner = document.getElementById('spinner');
+            const btnText = document.getElementById('btnText');
+            const resultContainer = document.getElementById('result-container');
+            const priceText = document.getElementById('priceText');
+
+            // 1. Show Loading State
+            btn.disabled = true;
+            spinner.style.display = 'block';
+            btnText.innerText = 'Analyzing...';
+            resultContainer.style.display = 'none';
+
+            // 2. Gather Data
+            const formData = {
+                'Overall Qual': document.getElementById('Overall Qual').value,
+                'Gr Liv Area': document.getElementById('Gr Liv Area').value,
+                'Total Bsmt SF': document.getElementById('Total Bsmt SF').value,
+                '1st Flr SF': document.getElementById('1st Flr SF').value,
+                'Garage Cars': document.getElementById('Garage Cars').value,
+                'Garage Area': document.getElementById('Garage Area').value,
+                'Year Built': document.getElementById('Year Built').value,
+                'Full Bath': document.getElementById('Full Bath').value,
+                'Year Remod/Add': document.getElementById('Year Remod/Add').value,
+                'Mas Vnr Area': document.getElementById('Mas Vnr Area').value,
+                'Fireplaces': document.getElementById('Fireplaces').value,
+                'BsmtFin SF 1': document.getElementById('BsmtFin SF 1').value
+            };
+
+            try {
+                // 3. API Request (Simulated delay for effect if local)
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                // 4. Update UI
+                if (result.predicted_price) {
+                    const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(result.predicted_price);
+                    priceText.innerText = price;
+                    resultContainer.style.display = 'block';
+                } else {
+                    alert("Error: " + result.error);
+                }
+            } catch (error) {
+                alert("Failed to connect to the server.");
+            } finally {
+                // Reset Button
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                btnText.innerText = 'Estimate Price';
+            }
+        }
+    </script>
+</body>
+</html>
