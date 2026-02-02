@@ -40,7 +40,7 @@ HousePriceApp/
 
 * Clone the Repository
 ```
-git clone [https://github.com/YOOSUF-HUB/house-price-predictor.git](https://github.com/YOOSUF-HUB/house-price-predictor.git)
+git clone https://github.com/YOOSUF-HUB/house-price-predictor.git
 cd house-price-predictor
 ```
 
